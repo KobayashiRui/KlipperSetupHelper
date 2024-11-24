@@ -1,0 +1,3 @@
+# KlipperSetupHelper
+Klipper関連のソフトウェアの管理を行うWebアプリケーション。
+Klipperを入れたい or 入っているLinuxボードにインストールをして使用。
