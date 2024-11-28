@@ -96,6 +96,10 @@ jobs:
     name: Create Release
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+
     steps:
       # 1. リポジトリのチェックアウト
       - name: Checkout repository
