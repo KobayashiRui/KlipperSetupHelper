@@ -1,23 +1,22 @@
-name: Release on Push to Main
+name: Build and Release
 
 on:
   push:
     branches:
-      - main  # mainブランチへのプッシュ時に実行
+      - main
 
 jobs:
-  release:
-    name: Build and Release
-    permissions:
-      contents: write
+  build-backend:
+    name: Build Backend
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        target: [armv7-unknown-linux-gnueabihf, aarch64-unknown-linux-gnu]
+        target:
+          - armv7-unknown-linux-gnueabihf
+          - aarch64-unknown-linux-gnu
 
     steps:
-      # 1. リポジトリをチェックアウト
+      # 1. リポジトリのチェックアウト
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -43,75 +42,98 @@ jobs:
             sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross
           fi
 
-      # 5. リンカの設定
-      - name: Configure Cargo for cross-compilation
-        run: |
-          mkdir -p .cargo
-          echo '[target.armv7-unknown-linux-gnueabihf]' >> .cargo/config.toml
-          echo 'linker = "arm-linux-gnueabihf-gcc"' >> .cargo/config.toml
-          echo '[target.aarch64-unknown-linux-gnu]' >> .cargo/config.toml
-          echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
+      # 5. バックエンドのビルド
+      - name: Build backend for ${{ matrix.target }}
+        working-directory: ./backend
+        run: cargo build --release --target ${{ matrix.target }}
 
-      # 6. Cargo.tomlのバージョンを取得
-      - name: Get Cargo version
-        id: cargo_version
-        run: |
-          version=$(sed -n 's/^version *= *"\(.*\)"/\1/p' backend/Cargo.toml)
-          echo "version=$version" >> $GITHUB_ENV
+      # 6. アーティファクトのアップロード
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ksh-backend-${{ matrix.target }}
+          path: ./backend/target/${{ matrix.target }}/release/backend
 
-      # 7. ksh_install.shのTAGを更新
-      - name: Update TAG in ksh_install.sh
-        run: |
-          tag="v${{ env.version }}"
-          sed -i "s/^TAG=.*/TAG=\"$tag\"/" ksh_install.sh
+  build-frontend:
+    name: Build Frontend and Prepare Shared Files
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # 8. フロントエンドのビルド
-      - name: Build frontend with Yarn
+      # 2. Yarnのセットアップとフロントエンドビルド
+      - name: Build frontend
         working-directory: ./frontend
         run: |
           corepack enable
           yarn install
           yarn run build
 
-      # 9. バックエンドのビルド
-      - name: Build backend for ${{ matrix.target }}
-        working-directory: ./backend
-        run: |
-          cargo build --release --target ${{ matrix.target }}
+      # 3. アーティファクトのアップロード
+      - name: Upload frontend and shared files
+        uses: actions/upload-artifact@v3
+        with:
+          name: shared-files
+          path: |
+            ./frontend/ksh_frontend_assets
+            ./ksh_install.sh
+            ./KlipperSetuphelper.service
 
-      # 10. アーティファクトの準備
-      - name: Prepare release artifacts
-        run: |
-          mkdir -p release
-          
-          # フロントエンドアセット
-          cp -r ./frontend/frontend_assets ./release/frontend_assets
-          zip -r ./release/frontend-assets.zip ./release/frontend_assets
-          
-          # バックエンドバイナリ
-          cp ./backend/target/${{ matrix.target }}/release/backend ./release/backend-${{ matrix.target }}
-          
-          # ksh_install.shとサービスファイル
-          cp ./ksh_install.sh ./release/
-          cp ./KlipperSetupHelper.service ./release/
+  release:
+    name: Create Release
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # 11. リリースの作成とアップロード
+      # 2. アーティファクトのダウンロード
+      - name: Download shared files
+        uses: actions/download-artifact@v3
+        with:
+          name: shared-files
+
+      - name: Download backend artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ksh-backend-armv7-unknown-linux-gnueabihf
+
+      - name: Download backend artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ksh-backend-aarch64-unknown-linux-gnu
+
+      # 3. Cargo.tomlのバージョンを取得
+      - name: Get Cargo version
+        id: cargo_version
+        run: |
+          version=$(sed -n 's/^version *= *"\(.*\)"/\1/p' backend/Cargo.toml)
+          echo "version=$version" >> $GITHUB_ENV
+
+      # 4. ksh_install.shのTAGを更新
+      - name: Update TAG in ksh_install.sh
+        run: |
+          tag="v${{ env.version }}"
+          sed -i "s/^TAG=.*/TAG=\"$tag\"/" ksh_install.sh
+
+      # 5. リリースの作成
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ env.version }}
           name: Release v${{ env.version }}
-          releaseDraft: true
-          prerelease: false
           body: |
             ## What's Included
             - Backend binaries
             - Frontend assets
             - ksh_install.sh
-            - Service file (KlipperSetupHelper.service)
+            - Service file (KlipperSetuphelper.service)
           artifacts: |
-            release/frontend-assets.zip
-            release/backend-${{ matrix.target }}
-            release/ksh_install.sh
-            release/KlipperSetupHelper.service
+            backend-armv7-unknown-linux-gnueabihf
+            backend-aarch64-unknown-linux-gnu
+            ./frontend/ksh_frontend_assets
+            ./ksh_install.sh
+            ./KlipperSetuphelper.service

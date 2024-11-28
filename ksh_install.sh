@@ -11,9 +11,9 @@ ARCH=$(uname -m)
 # ファイルURLの定義
 FRONTEND_ZIP_URL="https://github.com/$REPO/releases/download/$TAG/frontend-assets.zip"
 if [ "$ARCH" = "aarch64" ]; then
-  BACKEND_FILE_URL="https://github.com/$REPO/releases/download/$TAG/backend-aarch64-unknown-linux-gnu"
+  BACKEND_FILE_URL="https://github.com/$REPO/releases/download/$TAG/ksh-backend-aarch64-unknown-linux-gnu"
 elif [ "$ARCH" = "armv7l" ]; then
-  BACKEND_FILE_URL="https://github.com/$REPO/releases/download/$TAG/backend-armv7-unknown-linux-gnueabihf"
+  BACKEND_FILE_URL="https://github.com/$REPO/releases/download/$TAG/ksh-backend-armv7-unknown-linux-gnueabihf"
 else
   echo "Unsupported architecture: $ARCH"
   exit 1

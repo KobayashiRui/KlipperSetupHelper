@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build:{
-    outDir: 'frontend_assets'
+    outDir: 'ksh_frontend_assets'
   }
 })
