@@ -123,12 +123,12 @@ jobs:
           name: ksh-backend-aarch64-unknown-linux-gnu
           path: ./ksh-backend-aarch64-unknown-linux-gnu
 
-      # ファイル名を変更
-      - name: Rename armv7 backend
-        run: mv ./ksh-backend-armv7-unknown-linux-gnueabihf/backend ./ksh-backend-armv7-unknown-linux-gnueabihf
-
-      - name: Rename aarch64 backend
-        run: mv ./ksh-backend-aarch64-unknown-linux-gnu/backend ./ksh-backend-aarch64-unknown-linux-gnu
+      # artifactsディレクトリに移動
+      - name: Move backend artifacts to artifacts directory
+        run: |
+          mkdir -p ./artifacts
+          mv ./ksh-backend-armv7-unknown-linux-gnueabihf/backend ./artifacts/ksh-backend-armv7-unknown-linux-gnueabihf
+          mv ./ksh-backend-aarch64-unknown-linux-gnu/backend ./artifacts/ksh-backend-aarch64-unknown-linux-gnu
 
       # 3. Cargo.tomlのバージョンを取得
       - name: Get Cargo version
@@ -163,8 +163,8 @@ jobs:
             - ksh_install.sh
             - Service file (KlipperSetupHelper.service)
           artifacts: |
-            ./ksh-backend-armv7-unknown-linux-gnueabihf/backend
-            ./ksh-backend-aarch64-unknown-linux-gnu/backend
+            ./artifacts/ksh-backend-armv7-unknown-linux-gnueabihf
+            ./artifacts/ksh-backend-aarch64-unknown-linux-gnu
             ./frontend/ksh_frontend_assets.zip
             ./ksh_install.sh
             ./KlipperSetupHelper.service
