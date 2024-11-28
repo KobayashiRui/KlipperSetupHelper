@@ -33,11 +33,11 @@ jobs:
           version=$(sed -n 's/^version *= *"\(.*\)"/\1/p' backend/Cargo.toml)
           echo "version=$version" >> $GITHUB_ENV
 
-      # 4. install.shのTAGを更新
-      - name: Update TAG in install.sh
+      # 4. ksh_install.shのTAGを更新
+      - name: Update TAG in ksh_install.sh
         run: |
           tag="v${{ env.version }}"
-          sed -i "s/^TAG=.*/TAG=\"$tag\"/" install.sh
+          sed -i "s/^TAG=.*/TAG=\"$tag\"/" ksh_install.sh
 
       # 5. フロントエンドのビルド
       - name: Build frontend with Yarn
@@ -65,8 +65,8 @@ jobs:
           # バックエンドバイナリ
           cp ./backend/target/${{ matrix.target }}/release/backend ./release/backend-${{ matrix.target }}
           
-          # install.shとサービスファイル
-          cp ./install.sh ./release/
+          # ksh_install.shとサービスファイル
+          cp ./ksh_install.sh ./release/
           cp ./KlipperSetupHelper.service ./release/
 
       # 8. リリースの作成とアップロード
@@ -80,10 +80,10 @@ jobs:
             ## What's Included
             - Backend binaries
             - Frontend assets
-            - install.sh
+            - ksh_install.sh
             - Service file (KlipperSetupHelper.service)
           artifacts: |
             release/frontend-assets.zip
             release/backend-${{ matrix.target }}
-            release/install.sh
+            release/ksh_install.sh
             release/KlipperSetupHelper.service
