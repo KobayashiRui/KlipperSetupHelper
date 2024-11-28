@@ -56,6 +56,9 @@ jobs:
         working-directory: ./backend
         run: cargo build --release --target ${{ matrix.target }}
 
+      - name: Verify build output
+        run: ls -lh ./backend/target/${{ matrix.target }}/release/
+
       # 7. アーティファクトのアップロード
       - name: Upload backend artifact
         uses: actions/upload-artifact@v3
