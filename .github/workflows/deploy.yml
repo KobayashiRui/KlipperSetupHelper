@@ -90,7 +90,7 @@ jobs:
           path: |
             ./frontend/ksh_frontend_assets
             ./ksh_install.sh
-            ./KlipperSetuphelper.service
+            ./KlipperSetupHelper.service
 
   release:
     name: Create Release
@@ -123,6 +123,13 @@ jobs:
           name: ksh-backend-aarch64-unknown-linux-gnu
           path: ./ksh-backend-aarch64-unknown-linux-gnu
 
+      # ファイル名を変更
+      - name: Rename armv7 backend
+        run: mv ./ksh-backend-armv7-unknown-linux-gnueabihf/backend ./ksh-backend-armv7-unknown-linux-gnueabihf
+
+      - name: Rename aarch64 backend
+        run: mv ./ksh-backend-aarch64-unknown-linux-gnu/backend ./ksh-backend-aarch64-unknown-linux-gnu
+
       # 3. Cargo.tomlのバージョンを取得
       - name: Get Cargo version
         id: cargo_version
@@ -136,6 +143,12 @@ jobs:
           tag="v${{ env.version }}"
           sed -i "s/^TAG=.*/TAG=\"$tag\"/" ksh_install.sh
 
+      # フロントエンドを ZIP に圧縮
+      - name: Compress frontend assets
+        run: |
+          cd ./frontend
+          zip -r ksh_frontend_assets.zip ksh_frontend_assets
+
       # 5. リリースの作成
       - name: Create Release
         uses: ncipollo/release-action@v1
@@ -148,10 +161,10 @@ jobs:
             - Backend binaries
             - Frontend assets
             - ksh_install.sh
-            - Service file (KlipperSetuphelper.service)
+            - Service file (KlipperSetupHelper.service)
           artifacts: |
             ./ksh-backend-armv7-unknown-linux-gnueabihf/backend
             ./ksh-backend-aarch64-unknown-linux-gnu/backend
-            ./frontend/ksh_frontend_assets
+            ./frontend/ksh_frontend_assets.zip
             ./ksh_install.sh
-            ./KlipperSetuphelper.service
+            ./KlipperSetupHelper.service
