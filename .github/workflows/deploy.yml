@@ -111,11 +111,13 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ksh-backend-armv7-unknown-linux-gnueabihf
+          path: ./ksh-backend-armv7-unknown-linux-gnueabihf
 
       - name: Download backend artifacts (aarch64)
         uses: actions/download-artifact@v3
         with:
           name: ksh-backend-aarch64-unknown-linux-gnu
+          path: ./ksh-backend-aarch64-unknown-linux-gnu
 
       # アーティファクト展開後のファイルリストを確認
       - name: Verify downloaded artifacts
@@ -154,8 +156,8 @@ jobs:
             - ksh_install.sh
             - Service file (KlipperSetuphelper.service)
           artifacts: |
-            ksh-backend-armv7-unknown-linux-gnueabihf/backend
-            ksh-backend-aarch64-unknown-linux-gnu/backend
+            ./ksh-backend-armv7-unknown-linux-gnueabihf/backend
+            ./ksh-backend-aarch64-unknown-linux-gnu/backend
             ./frontend/ksh_frontend_assets
             ./ksh_install.sh
             ./KlipperSetuphelper.service
