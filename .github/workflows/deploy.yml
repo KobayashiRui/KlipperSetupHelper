@@ -104,15 +104,25 @@ jobs:
         with:
           name: shared-files
 
-      - name: Download backend artifacts
+      - name: Download backend artifacts (armv7)
         uses: actions/download-artifact@v3
         with:
           name: ksh-backend-armv7-unknown-linux-gnueabihf
 
-      - name: Download backend artifacts
+      - name: Download backend artifacts (aarch64)
         uses: actions/download-artifact@v3
         with:
           name: ksh-backend-aarch64-unknown-linux-gnu
+
+      # アーティファクト展開後のファイルリストを確認
+      - name: Verify downloaded artifacts
+        run: |
+          echo "Listing frontend assets:"
+          ls -lh ./ksh-frontend-assets
+          echo "Listing armv7 backend:"
+          ls -lh ./ksh-backend-armv7-unknown-linux-gnueabihf
+          echo "Listing aarch64 backend:"
+          ls -lh ./ksh-backend-aarch64-unknown-linux-gnu
 
       # 3. Cargo.tomlのバージョンを取得
       - name: Get Cargo version
@@ -141,8 +151,8 @@ jobs:
             - ksh_install.sh
             - Service file (KlipperSetuphelper.service)
           artifacts: |
-            ksh-backend-armv7-unknown-linux-gnueabihf
-            ksh-backend-aarch64-unknown-linux-gnu
+            ksh-backend-armv7-unknown-linux-gnueabihf/backend
+            ksh-backend-aarch64-unknown-linux-gnu/backend
             ./frontend/ksh_frontend_assets
             ./ksh_install.sh
             ./KlipperSetuphelper.service

@@ -1,1 +1,0 @@
-cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/Users/rui/Documents/GitHub/KlipperSetupHelper/backend/target/debug/build/mime_guess-aab63100d35db04d/out/mime_types_generated.rs
