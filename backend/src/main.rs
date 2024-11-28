@@ -7,7 +7,6 @@ mod api;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-
     tokio::join!(
         serve(hosting::hosting_frontend_dir_app(), 9000),
         serve(api::api_app(), 9001),
