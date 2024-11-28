@@ -42,12 +42,21 @@ jobs:
             sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross
           fi
 
-      # 5. バックエンドのビルド
+     # 5. リンカの設定
+      - name: Configure Cargo for cross-compilation
+        run: |
+          mkdir -p .cargo
+          echo '[target.armv7-unknown-linux-gnueabihf]' >> .cargo/config.toml
+          echo 'linker = "arm-linux-gnueabihf-gcc"' >> .cargo/config.toml
+          echo '[target.aarch64-unknown-linux-gnu]' >> .cargo/config.toml
+          echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
+
+      # 6. バックエンドのビルド
       - name: Build backend for ${{ matrix.target }}
         working-directory: ./backend
         run: cargo build --release --target ${{ matrix.target }}
 
-      # 6. アーティファクトのアップロード
+      # 7. アーティファクトのアップロード
       - name: Upload backend artifact
         uses: actions/upload-artifact@v3
         with:
@@ -132,8 +141,8 @@ jobs:
             - ksh_install.sh
             - Service file (KlipperSetuphelper.service)
           artifacts: |
-            backend-armv7-unknown-linux-gnueabihf
-            backend-aarch64-unknown-linux-gnu
+            ksh-backend-armv7-unknown-linux-gnueabihf
+            ksh-backend-aarch64-unknown-linux-gnu
             ./frontend/ksh_frontend_assets
             ./ksh_install.sh
             ./KlipperSetuphelper.service
