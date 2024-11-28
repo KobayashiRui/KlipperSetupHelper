@@ -8,6 +8,10 @@ on:
 jobs:
   release:
     name: Build and Release
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
     runs-on: ubuntu-latest
 
     strategy:
@@ -100,6 +104,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ env.version }}
           name: Release v${{ env.version }}
+          releaseDraft: true
+          prerelease: false
           body: |
             ## What's Included
             - Backend binaries
