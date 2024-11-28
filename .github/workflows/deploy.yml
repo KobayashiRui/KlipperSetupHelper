@@ -26,20 +26,35 @@ jobs:
           toolchain: stable
           override: true
 
-      # 3. Cargo.tomlのバージョンを取得
+      # 3. ターゲットの追加
+      - name: Add Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      # 4. クロスコンパイルツールチェインのインストール
+      - name: Install cross-compilation tools
+        run: |
+          if [[ "${{ matrix.target }}" == "armv7-unknown-linux-gnueabihf" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y gcc-arm-linux-gnueabihf
+          elif [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+          fi
+
+      # 5. Cargo.tomlのバージョンを取得
       - name: Get Cargo version
         id: cargo_version
         run: |
           version=$(sed -n 's/^version *= *"\(.*\)"/\1/p' backend/Cargo.toml)
           echo "version=$version" >> $GITHUB_ENV
 
-      # 4. ksh_install.shのTAGを更新
+      # 6. ksh_install.shのTAGを更新
       - name: Update TAG in ksh_install.sh
         run: |
           tag="v${{ env.version }}"
           sed -i "s/^TAG=.*/TAG=\"$tag\"/" ksh_install.sh
 
-      # 5. フロントエンドのビルド
+      # 7. フロントエンドのビルド
       - name: Build frontend with Yarn
         working-directory: ./frontend
         run: |
@@ -47,13 +62,13 @@ jobs:
           yarn install
           yarn run build
 
-      # 6. バックエンドのビルド
+      # 8. バックエンドのビルド
       - name: Build backend for ${{ matrix.target }}
         working-directory: ./backend
         run: |
           cargo build --release --target ${{ matrix.target }}
 
-      # 7. アーティファクトの準備
+      # 9. アーティファクトの準備
       - name: Prepare release artifacts
         run: |
           mkdir -p release
@@ -69,7 +84,7 @@ jobs:
           cp ./ksh_install.sh ./release/
           cp ./KlipperSetupHelper.service ./release/
 
-      # 8. リリースの作成とアップロード
+      # 10. リリースの作成とアップロード
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
