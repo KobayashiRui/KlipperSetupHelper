@@ -1,0 +1,11 @@
+[Unit]
+Description=Hoge Application
+After=network.target
+
+[Service]
+ExecStart=%h/KlipperSetupHelper/backend
+WorkingDirectory=%h/KlipperSetupHelper
+Restart=always
+
+[Install]
+WantedBy=default.target
