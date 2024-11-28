@@ -1,0 +1,89 @@
+name: Release on Push to Main
+
+on:
+  push:
+    branches:
+      - main  # mainブランチへのプッシュ時に実行
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: [armv7-unknown-linux-gnueabihf, aarch64-unknown-linux-gnu]
+
+    steps:
+      # 1. リポジトリをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Rustのセットアップ
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      # 3. Cargo.tomlのバージョンを取得
+      - name: Get Cargo version
+        id: cargo_version
+        run: |
+          version=$(grep -oP '^version\\s*=\\s*\"\\K[0-9]+\\.[0-9]+\\.[0-9]+' backend/Cargo.toml)
+          echo "version=$version" >> $GITHUB_ENV
+
+      # 4. install.shのTAGを更新
+      - name: Update TAG in install.sh
+        run: |
+          tag="v${{ env.version }}"
+          sed -i "s/^TAG=.*/TAG=\"$tag\"/" install.sh
+
+      # 5. フロントエンドのビルド
+      - name: Build frontend with Yarn
+        working-directory: ./frontend
+        run: |
+          corepack enable
+          yarn install
+          yarn run build
+
+      # 6. バックエンドのビルド
+      - name: Build backend for ${{ matrix.target }}
+        working-directory: ./backend
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      # 7. アーティファクトの準備
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release
+          
+          # フロントエンドアセット
+          cp -r ./frontend/frontend_assets ./release/frontend_assets
+          zip -r ./release/frontend-assets.zip ./release/frontend_assets
+          
+          # バックエンドバイナリ
+          cp ./backend/target/${{ matrix.target }}/release/backend ./release/backend-${{ matrix.target }}
+          
+          # install.shとサービスファイル
+          cp ./install.sh ./release/
+          cp ./KlipperSetupHelper.service ./release/
+
+      # 8. リリースの作成とアップロード
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ env.version }}
+          name: Release v${{ env.version }}
+          body: |
+            ## What's Included
+            - Backend binaries
+            - Frontend assets
+            - install.sh
+            - Service file (KlipperSetupHelper.service)
+          artifacts: |
+            release/frontend-assets.zip
+            release/backend-${{ matrix.target }}
+            release/install.sh
+            release/KlipperSetupHelper.service
