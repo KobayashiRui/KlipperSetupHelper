@@ -119,16 +119,6 @@ jobs:
           name: ksh-backend-aarch64-unknown-linux-gnu
           path: ./ksh-backend-aarch64-unknown-linux-gnu
 
-      # アーティファクト展開後のファイルリストを確認
-      - name: Verify downloaded artifacts
-        run: |
-          echo "Listing frontend assets:"
-          ls -lh ./ksh-frontend-assets
-          echo "Listing armv7 backend:"
-          ls -lh ./ksh-backend-armv7-unknown-linux-gnueabihf
-          echo "Listing aarch64 backend:"
-          ls -lh ./ksh-backend-aarch64-unknown-linux-gnu
-
       # 3. Cargo.tomlのバージョンを取得
       - name: Get Cargo version
         id: cargo_version
